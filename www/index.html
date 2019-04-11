@@ -6,14 +6,15 @@
 <script src="require.js"></script>
 
 <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
-<style>
-	body { margin:0; padding:0; }
-	#map { position:absolute; top:0; bottom:0; width:100%; 
-	}
-</style>
+<link rel="stylesheet" type="text/css" href="index.css">
+
 <title>NYC Ride Sharing Optimization</title>
 <body>
 <div id='map'></div>
+<div class='container'>
+  <input type="checkbox" id="pickup" onclick="handlePickups()"> &nbsp; Show Number of Pickups
+  <input type="checkbox" id="collision" onclick=""> &nbsp; Show Number of Collisions
+</div>
 <script src="proj.js"></script>
 </body>
 </html>
