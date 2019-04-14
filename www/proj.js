@@ -2,11 +2,15 @@ var h3, geojson2h3, fetchedData;
 var h3Granularity = 10;
 mapboxgl.accessToken = 'pk.eyJ1IjoiYW1vbG53IiwiYSI6ImNqdGY4ZjlqNjFxZDkzeW9iczE4MWg4MGEifQ.YpUeahTCDxjUq84pSDGeNw';
 
-var pickupEndpoint = 'https://gxv2awctcc.execute-api.us-east-1.amazonaws.com/taxi/taxipickupcounts'
+var pickupEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcounts'
+var collisionEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/collisioncounts'
+var combinedEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcollisioncounts'
 var proxyUrl = 'https://cors-anywhere.herokuapp.com/'
 
 const sourceId = 'h3-hexes';
-const layerId = `${sourceId}-layer`;
+const pickupLayerId = `${sourceId}-pickup-layer`;
+const collisionLayerId = `${sourceId}-collision-layer`;
+const combinedLayerId = `${sourceId}-combined-layer`;
 
 var config = ({
   lng: -74.0111266,
@@ -29,7 +33,9 @@ var map = new mapboxgl.Map({
 
 require(['h3-js'], function (h3loaded) {
 	h3 = h3loaded
-	loadHeatmap(config.lat, config.lng);
+	loadPickupHeatmap(config.lat, config.lng);
+	//loadCollisionHeatmap(config.lat, config.lng);
+	//loadBothHeatmap(config.lat, config.lng);
 });
 
 require(['geojson2h3'], function (geojson2h3loaded) {
@@ -40,25 +46,36 @@ require(['geojson2h3'], function (geojson2h3loaded) {
 
 function pickupLayer(pickupData) {
   const h3PickupLayer = {};
-  console.log(pickupData);
   pickupData.forEach(({h3, pickup_count}) => {
     h3PickupLayer[h3] = (h3PickupLayer[h3] || 0) + pickup_count;
   });
   fetchedData = normalizeLayer(h3PickupLayer);
-  return h3PickupLayer;
-}
-
-function collisionLayer(collision, lat, lng) {
-  const collisionLayer = {};
-  collision.forEach(({latitude, longitude, collision_count}) => {
-    const h3Index = h3.geoToH3(latitude, longitude, h3Granularity);
-    collisionLayer[h3Index] = (collisionLayer[h3Index] || 0) + collision_count;
-  });
-  fetchedData = normalizeLayer(collisionLayer);
   return fetchedData;
 }
 
-function loadHeatmap(lat, lng) {
+function collisionLayer(collisionData) {
+  const h3collisionLayer = {};
+  collisionData.forEach(({h3, collision_count}) => {
+    h3collisionLayer[h3] = (h3collisionLayer[h3] || 0) + collision_count;
+  });
+  fetchedData = normalizeLayer(h3collisionLayer);
+  return fetchedData;
+}
+
+function combinedLayer(combinedData) {
+  const h3combinedLayer = {};
+  combinedData.forEach(({h3, pickup_count, collision_count}) => { 
+	h3combinedLayer[h3] = (h3combinedLayer[h3] || 0) + (pickup_count*0.1 - collision_count*2);
+  });
+  fetchedData = normalizeLayer(h3combinedLayer);
+  return fetchedData;
+}
+
+function dayOfWeekAsString(dayIndex) {
+  return ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][dayIndex];
+}
+
+function loadPickupHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
 	
 	var today = new Date();
@@ -67,8 +84,39 @@ function loadHeatmap(lat, lng) {
 	const nearbyh3 = h3.kRing(h3Index, 3);
 	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
+
 	postData(proxyUrl + pickupEndpoint, request)
-	  .then(data => renderHexes(map, normalizeLayer(pickupLayer(data))) )
+	  .then(data => renderHexes(pickupLayerId, map, normalizeLayer(pickupLayer(data))) )
+	  .catch(error => console.error(error));
+}
+
+function loadCollisionHeatmap(lat, lng) {
+	h3Index = h3.geoToH3(lat, lng, h3Granularity)
+	
+	var today = new Date();
+	var hourOfDay = today.getHours()
+	var dayOfWeek = today.getDay()
+	const nearbyh3 = h3.kRing(h3Index, 3);
+	
+	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
+
+	postData(proxyUrl + collisionEndpoint, request)
+	  .then(data => renderHexes(collisionLayerId, map, normalizeLayer(collisionLayer(data))) )
+	  .catch(error => console.error(error));
+}
+
+function loadBothHeatmap(lat, lng) {
+	h3Index = h3.geoToH3(lat, lng, h3Granularity)
+	
+	var today = new Date();
+	var hourOfDay = today.getHours()
+	var dayOfWeek = today.getDay()
+	const nearbyh3 = h3.kRing(h3Index, 3);
+	
+	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
+
+	postData(proxyUrl + combinedEndpoint, request)
+	  .then(data => renderHexes(combinedLayerId, map, normalizeLayer(combinedLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
@@ -82,10 +130,6 @@ async function postData(url, request) {
     });
     let responseData = await response.json();
 	return responseData;
-}
-
-function dayOfWeekAsString(dayIndex) {
-  return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][dayIndex-1];
 }
 
 function normalizeLayer(layer, baseAtZero = false) {
@@ -103,7 +147,7 @@ function normalizeLayer(layer, baseAtZero = false) {
 	  return newlayer;
 }
 
-function renderHexes(map, hexagons) {
+function renderHexes(layerId, map, hexagons) {
   // Transform the current hexagon map into a GeoJSON object
   console.log(hexagons);
   const geojson = geojson2h3.h3SetToFeatureCollection(
@@ -118,6 +162,11 @@ function renderHexes(map, hexagons) {
       type: 'geojson',
       data: geojson
     });
+  }
+
+  let layer = map.getLayer(layerId);
+  
+  if (!layer) {
 	map.addLayer({
       id: layerId,
       source: sourceId,
@@ -168,31 +217,56 @@ var marker = new mapboxgl.Marker({
 .setPopup(popup) // sets a popup on this marker
 .addTo(map);
 
+var lat = config.lat;
+var lng = config.lng;
+
 function onDragEnd() {
-	var lngLat = marker.getLngLat();
-	loadHeatmap(lngLat.lat, lngLat.lng);
-	popup.setText('Longitude: ' + lngLat.lng + ' Latitude: ' + lngLat.lat);
+	lngLat = marker.getLngLat();
+	lat = lngLat.lat;
+	lng = lngLat.lng;
+	var pickupBox = document.getElementById("pickup");
+	var collisionBox = document.getElementById("collision");
+	if (pickupBox.checked == true && collisionBox.checked == false){
+		loadPickupHeatmap(lat, lng);
+	}
+	else if (pickupBox.checked == false && collisionBox.checked == true){
+		loadCollisionHeatmap(lat, lng);
+	}
+	else if (pickupBox.checked == true && collisionBox.checked == true){
+		loadBothHeatmap(lat, lng);
+	}
+	popup.setText('Longitude: ' + lng + ' Latitude: ' + lat);
 }
 
 marker.on('dragend', onDragEnd);
 
-function handlePickups() {
-  var checkBox = document.getElementById("pickup");
-  if (checkBox.checked == true){
-	map.setLayoutProperty(layerId, 'visibility', 'visible');
-  } else {
-    map.setLayoutProperty(layerId, 'visibility', 'none');
-  }
+function HandleCheckboxes() {
+	var pickupBox = document.getElementById("pickup");
+	var collisionBox = document.getElementById("collision");
+	if (pickupBox.checked == true && collisionBox.checked == false){
+		loadPickupHeatmap(lat, lng);
+		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
+		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
+		map.setLayoutProperty(pickupLayerId, 'visibility', 'visible');
+	}
+	else if (pickupBox.checked == false && collisionBox.checked == true){
+		loadCollisionHeatmap(lat, lng);
+		map.setLayoutProperty(collisionLayerId, 'visibility', 'visible');
+		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
+		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+	}
+	else if (pickupBox.checked == true && collisionBox.checked == true){
+		loadBothHeatmap(lat, lng);
+		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
+		map.setLayoutProperty(combinedLayerId, 'visibility', 'visible');
+		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+	}
+	else {
+		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
+		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
+		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+	}
 }
-
-function handleCollisions() {
-  var checkBox = document.getElementById("collision");
-  if (checkBox.checked == true){
-	map.setLayoutProperty(collisionLayerId, 'visibility', 'visible');
-  } else {
-    map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
-  }
-}  
 
 
 
