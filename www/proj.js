@@ -12,6 +12,10 @@ const pickupLayerId = `${sourceId}-pickup-layer`;
 const collisionLayerId = `${sourceId}-collision-layer`;
 const combinedLayerId = `${sourceId}-combined-layer`;
 
+var pickUpLegend = document.getElementById('pickup-legend');
+var collisionLegend = document.getElementById('collision-legend');
+var combinedLegend = document.getElementById('combined-legend');
+
 var config = ({
   lng: -74.0111266,
   lat: 40.7051088,
@@ -42,8 +46,6 @@ require(['geojson2h3'], function (geojson2h3loaded) {
 	geojson2h3 = geojson2h3loaded
 });
 
-
-
 function pickupLayer(pickupData) {
   const h3PickupLayer = {};
   pickupData.forEach(({h3, pickup_count}) => {
@@ -65,7 +67,7 @@ function collisionLayer(collisionData) {
 function combinedLayer(combinedData) {
   const h3combinedLayer = {};
   combinedData.forEach(({h3, pickup_count, collision_count}) => { 
-	h3combinedLayer[h3] = (h3combinedLayer[h3] || 0) + (pickup_count*0.1 - collision_count*2);
+	h3combinedLayer[h3] = (h3combinedLayer[h3] || 0) + (pickup_count*0.1 - collision_count*100);
   });
   fetchedData = normalizeLayer(h3combinedLayer);
   return fetchedData;
@@ -186,17 +188,16 @@ function renderHexes(layerId, map, hexagons) {
   map.setPaintProperty(layerId, 'fill-color', {
     property: 'value',
     stops: [
-	  [0, config.colorScale[0]],
-      [0.1, config.colorScale[1]],
-      [0.2, config.colorScale[2]],
-	  [0.3, config.colorScale[3]],
-      [0.4, config.colorScale[4]],
-      [0.5, config.colorScale[5]],
-	  [0.6, config.colorScale[6]],
-      [0.7, config.colorScale[7]],
-      [0.8, config.colorScale[8]],
-	  [0.9, config.colorScale[9]],
-	  [1, config.colorScale[10]]
+	  [0.1, config.colorScale[0]],
+      [0.2, config.colorScale[1]],
+      [0.3, config.colorScale[2]],
+	  [0.4, config.colorScale[3]],
+      [0.5, config.colorScale[4]],
+      [0.6, config.colorScale[5]],
+	  [0.7, config.colorScale[6]],
+      [0.8, config.colorScale[7]],
+      [0.9, config.colorScale[8]],
+	  [1.0, config.colorScale[9]]
     ]
   });
   
@@ -216,6 +217,34 @@ var marker = new mapboxgl.Marker({
 .setLngLat([config.lng,config.lat])
 .setPopup(popup) // sets a popup on this marker
 .addTo(map);
+
+map.on('click', function(e) {
+	h3Index = h3.geoToH3(e.lngLat.lat, e.lngLat.lng, h3Granularity);
+	console.log(h3Index, e.lngLat);
+	
+	var today = new Date();
+	var hourOfDay = today.getHours()
+	var dayOfWeek = today.getDay()
+	
+	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:h3Index})
+	var description;
+	postData(proxyUrl + combinedEndpoint, request)
+	  .then(data => addPopupOnClick(e.lngLat, data))
+	  .catch(error => console.error(error));
+	
+	
+});
+
+function addPopupOnClick(lngLat, data){
+	
+	var description = "<strong>Historical values based on selected zone</strong>" + 
+					  "<p> Pickup Count: " + data[0].pickup_count + "</br> Collision Count: " + data[0].collision_count + "</p>"; 
+	
+	new mapboxgl.Popup()
+		.setLngLat(lngLat)
+		.setHTML(description)
+		.addTo(map);
+}
 
 var lat = config.lat;
 var lng = config.lng;
@@ -248,23 +277,35 @@ function HandleCheckboxes() {
 		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
 		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
 		map.setLayoutProperty(pickupLayerId, 'visibility', 'visible');
+		pickUpLegend.style.display = 'block';
+		collisionLegend.style.display = 'none';
+		combinedLegend.style.display = 'none';
 	}
 	else if (pickupBox.checked == false && collisionBox.checked == true){
 		loadCollisionHeatmap(lat, lng);
 		map.setLayoutProperty(collisionLayerId, 'visibility', 'visible');
 		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
 		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+		pickUpLegend.style.display = 'none';
+		collisionLegend.style.display = 'block';
+		combinedLegend.style.display = 'none';
 	}
 	else if (pickupBox.checked == true && collisionBox.checked == true){
 		loadBothHeatmap(lat, lng);
 		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
 		map.setLayoutProperty(combinedLayerId, 'visibility', 'visible');
 		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+		pickUpLegend.style.display = 'none';
+		collisionLegend.style.display = 'none';
+		combinedLegend.style.display = 'block';
 	}
 	else {
 		map.setLayoutProperty(collisionLayerId, 'visibility', 'none');
 		map.setLayoutProperty(combinedLayerId, 'visibility', 'none');
 		map.setLayoutProperty(pickupLayerId, 'visibility', 'none');
+		pickUpLegend.style.display = 'none';
+		collisionLegend.style.display = 'none';
+		combinedLegend.style.display = 'none';
 	}
 }
 
