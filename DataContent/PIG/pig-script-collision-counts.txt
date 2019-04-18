@@ -1,0 +1,7 @@
+collision_taxidata = LOAD './cddata_h3.csv' USING PigStorage(',') 
+AS (source:chararray,weekday:chararray,hour:int,latitude:double,longitude:double,injured:int,killed:int,collision_ind:chararray,h3:chararray);
+
+collision_taxidata_grp = group collision_taxidata by (weekday,hour,h3);
+collision_taxidata_grp = FOREACH collision_taxidata_grp GENERATE FLATTEN(group) as (weekday,hour,h3), COUNT($1);
+STORE collision_taxidata_grp INTO './collision_groupby' USING PigStorage(',');
+fs -getmerge  ./collision_groupby collision_taxidata_grp.csv;
