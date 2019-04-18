@@ -16,12 +16,16 @@ var pickUpLegend = document.getElementById('pickup-legend');
 var collisionLegend = document.getElementById('collision-legend');
 var combinedLegend = document.getElementById('combined-legend');
 
+var hourOfDay, dayOfWeek, date;
+
 var config = ({
   lng: -74.0111266,
   lat: 40.7051088,
   zoom: 14,
   fillOpacity: 0.6,
-  colorScale: ['#0010E5','#3300E1','#7500DD','#B400D9','#D500BA','#D20078','#CE0038','#CA0500','#C64100','#C27A00','#BFB000'], 
+  combinedColorScale: ['#0010E5','#3300E1','#7500DD','#B400D9','#D500BA','#D20078','#CE0038','#CA0500','#C64100','#C27A00','#BFB000'],
+  pickupColorScale: ['#00fff9','#02e4f7','#04caf5','#06b0f4','#0896f2','#0a7cf1','#0c62ef','#0d48ee','#102eec','#1214eb'],
+  collisionColorScale: ['#f19e94','#f09385','#ef8877','#ef7d68','#ee725a','#ed684b','#ed5d3d','#ec522e','#eb4720','#eb3d12'],
   areaThreshold: 0.75
 });
 
@@ -37,9 +41,10 @@ var map = new mapboxgl.Map({
 
 require(['h3-js'], function (h3loaded) {
 	h3 = h3loaded
+	date = new Date();
+	hourOfDay = date.getHours()
+	dayOfWeek = date.getDay()
 	loadPickupHeatmap(config.lat, config.lng);
-	//loadCollisionHeatmap(config.lat, config.lng);
-	//loadBothHeatmap(config.lat, config.lng);
 });
 
 require(['geojson2h3'], function (geojson2h3loaded) {
@@ -79,46 +84,37 @@ function dayOfWeekAsString(dayIndex) {
 
 function loadPickupHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
-	
-	var today = new Date();
-	var hourOfDay = today.getHours()
-	var dayOfWeek = today.getDay()
+
 	const nearbyh3 = h3.kRing(h3Index, 3);
 	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
 
 	postData(proxyUrl + pickupEndpoint, request)
-	  .then(data => renderHexes(pickupLayerId, map, normalizeLayer(pickupLayer(data))) )
+	  .then(data => renderHexes(pickupLayerId, config.pickupColorScale, map, normalizeLayer(pickupLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
 function loadCollisionHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
-	
-	var today = new Date();
-	var hourOfDay = today.getHours()
-	var dayOfWeek = today.getDay()
+
 	const nearbyh3 = h3.kRing(h3Index, 3);
 	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
 
 	postData(proxyUrl + collisionEndpoint, request)
-	  .then(data => renderHexes(collisionLayerId, map, normalizeLayer(collisionLayer(data))) )
+	  .then(data => renderHexes(collisionLayerId, config.collisionColorScale, map, normalizeLayer(collisionLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
 function loadBothHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
-	
-	var today = new Date();
-	var hourOfDay = today.getHours()
-	var dayOfWeek = today.getDay()
+
 	const nearbyh3 = h3.kRing(h3Index, 3);
 	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
 
 	postData(proxyUrl + combinedEndpoint, request)
-	  .then(data => renderHexes(combinedLayerId, map, normalizeLayer(combinedLayer(data))) )
+	  .then(data => renderHexes(combinedLayerId, config.combinedColorScale, map, normalizeLayer(combinedLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
@@ -149,7 +145,7 @@ function normalizeLayer(layer, baseAtZero = false) {
 	  return newlayer;
 }
 
-function renderHexes(layerId, map, hexagons) {
+function renderHexes(layerId, colorScale, map, hexagons) {
   // Transform the current hexagon map into a GeoJSON object
   console.log(hexagons);
   const geojson = geojson2h3.h3SetToFeatureCollection(
@@ -188,16 +184,16 @@ function renderHexes(layerId, map, hexagons) {
   map.setPaintProperty(layerId, 'fill-color', {
     property: 'value',
     stops: [
-	  [0.1, config.colorScale[0]],
-      [0.2, config.colorScale[1]],
-      [0.3, config.colorScale[2]],
-	  [0.4, config.colorScale[3]],
-      [0.5, config.colorScale[4]],
-      [0.6, config.colorScale[5]],
-	  [0.7, config.colorScale[6]],
-      [0.8, config.colorScale[7]],
-      [0.9, config.colorScale[8]],
-	  [1.0, config.colorScale[9]]
+	  [0.1, colorScale[0]],
+      [0.2, colorScale[1]],
+      [0.3, colorScale[2]],
+	  [0.4, colorScale[3]],
+      [0.5, colorScale[4]],
+      [0.6, colorScale[5]],
+	  [0.7, colorScale[6]],
+      [0.8, colorScale[7]],
+      [0.9, colorScale[8]],
+	  [1.0, colorScale[9]]
     ]
   });
   
@@ -222,22 +218,35 @@ map.on('click', function(e) {
 	h3Index = h3.geoToH3(e.lngLat.lat, e.lngLat.lng, h3Granularity);
 	console.log(h3Index, e.lngLat);
 	
-	var today = new Date();
-	var hourOfDay = today.getHours()
-	var dayOfWeek = today.getDay()
-	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:[h3Index]})
 	var description;
 	postData(proxyUrl + combinedEndpoint, request)
 	  .then(data => addPopupOnClick(e.lngLat, data))
 	  .catch(error => console.error(error));
 	
-	
 });
+
+
+function overrideWeekDay() {
+	var selObj = document.getElementById("weekday");
+    var selValue = selObj.options[selObj.selectedIndex].text;
+	dayOfWeek = selObj.value;
+	HandleCheckboxes()
+	console.log(selValue);
+}
+
+function overrideHourDay() {
+	var selObj = document.getElementById("hourDay");
+    var selValue = selObj.options[selObj.selectedIndex].text;
+	hourOfDay = selValue;
+	HandleCheckboxes()
+	console.log(selValue);
+}
 
 function addPopupOnClick(lngLat, data){
 	
-	var description = "<strong>Historical values based on selected zone</strong>" + 
+	var description = "<strong>Historical values based on selected zone (" 
+						+ dayOfWeekAsString(dayOfWeek) + " : " + hourOfDay + " hour)</strong>" + 
 					  "<p> Pickup Count: " + data[0].pickup_count + "</br> Collision Count: " + data[0].collision_count + "</p>"; 
 	
 	new mapboxgl.Popup()
