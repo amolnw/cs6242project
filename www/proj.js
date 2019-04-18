@@ -317,6 +317,3 @@ function HandleCheckboxes() {
 		combinedLegend.style.display = 'none';
 	}
 }
-
-
-
