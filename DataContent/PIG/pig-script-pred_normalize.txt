@@ -1,0 +1,6 @@
+taxidata = LOAD './pred_final_1m.csv' USING PigStorage(',') as (lat:double, lon:double,day:chararray,hour:int,fare_amount:double);
+taxidata = FILTER taxidata BY (fare_amount!=null or fare_amount!=0.0) and (fare_amount >=3 and fare_amount <=7);
+taxidata = FILTER taxidata BY lat >=35 and lat <=45;
+taxidata = FILTER taxidata BY lon >=-75 and lon <=-70;
+STORE taxidata INTO './pred' USING PigStorage(',');
+fs -getmerge  ./pred/ pred_final_1m_scale.csv;

@@ -1,0 +1,8 @@
+taxidata = LOAD './preddata/*' USING PigStorage(',');
+taxidata = FOREACH taxidata GENERATE ROUND_TO((double)$2,5) as lat, ROUND_TO((double)$3,5) as lon, $4 as fare_amount, $5 as trip_distance, $6 as day, $7 as hour;
+taxidata_cluster = GROUP taxidata by (lat, lon, day, hour) ;
+taxidata_cluster_grpby = FOREACH taxidata_cluster GENERATE group.$0 as lat, group.$1 as lon, group.$2 as day, group.$3 as hour, SUM(taxidata.fare_amount)/SUM(taxidata.trip_distance) AS average;
+tcgf = foreach taxidata_cluster_grpby generate flatten($0), flatten($1), flatten($2), flatten($3), flatten($4);
+
+STORE tcgf INTO './pred' USING PigStorage(',');
+fs -getmerge  ./pred/ pred.csv;

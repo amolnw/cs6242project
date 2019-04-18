@@ -1,0 +1,6 @@
+taxidata = LOAD './zones_groupby1.csv' USING PigStorage(',');
+taxidata = FOREACH taxidata GENERATE ROUND_TO((double)$0,3) as latitude, ROUND_TO((double)$1,3) as longitude, $2 as weekday, $3 as hour, $5 as pickup_count;
+taxidata_grp = group taxidata by (latitude,longitude,weekday,hour);
+taxidata_grp = FOREACH taxidata_grp GENERATE FLATTEN(group) as (latitude,longitude,weekday,hour), COUNT($1);
+STORE taxidata_grp INTO './zones_groupby' USING PigStorage(',');
+fs -getmerge  ./zones_groupby zones_groupby_llwh.csv;
