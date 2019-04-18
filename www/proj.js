@@ -226,7 +226,7 @@ map.on('click', function(e) {
 	var hourOfDay = today.getHours()
 	var dayOfWeek = today.getDay()
 	
-	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:h3Index})
+	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:[h3Index]})
 	var description;
 	postData(proxyUrl + combinedEndpoint, request)
 	  .then(data => addPopupOnClick(e.lngLat, data))
@@ -308,6 +308,3 @@ function HandleCheckboxes() {
 		combinedLegend.style.display = 'none';
 	}
 }
-
-
-
