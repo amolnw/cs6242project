@@ -1,0 +1,35 @@
+2019-04-10 01:28:11,716 [main] INFO  org.apache.pig.tools.pigstats.mapreduce.SimplePigStats - Script Statistics: 
+
+HadoopVersion	PigVersion	UserId	StartedAt	FinishedAt	Features
+3.1.1	0.17.0	sriramayyagari	2019-04-10 00:20:27	2019-04-10 01:28:11	GROUP_BY
+
+Success!
+
+Job Stats (time in seconds):
+JobId	Maps	Reduces	MaxMapTime	MinMapTime	AvgMapTime	MedianMapTime	MaxReduceTime	MinReduceTime	AvgReduceTime	MedianReducetime	Alias	Feature	Outputs
+job_local1100159639_0001	101	14	n/a	n/a	n/a	n/a	n/a	n/a	n/a	n/a	taxidata,taxidata_cluster,taxidata_cluster_grpby,tcgf	GROUP_BY,COMBINER	hdfs://localhost:8020/user/sriramayyagari/pred,
+
+Input(s):
+Successfully read 174027265 records (880449157971 bytes) from: "hdfs://localhost:8020/user/sriramayyagari/preddata/*"
+
+Output(s):
+Successfully stored 155388822 records (48768837489 bytes) in: "hdfs://localhost:8020/user/sriramayyagari/pred"
+
+Counters:
+Total records written : 155388822
+Total bytes written : 48768837489
+Spillable Memory Manager spill count : 0
+Total bags proactively spilled: 0
+Total records proactively spilled: 0
+
+Job DAG:
+job_local1100159639_0001
+
+
+2019-04-10 01:28:11,717 [main] WARN  org.apache.hadoop.metrics2.impl.MetricsSystemImpl - JobTracker metrics system already initialized!
+2019-04-10 01:28:11,719 [main] WARN  org.apache.hadoop.metrics2.impl.MetricsSystemImpl - JobTracker metrics system already initialized!
+2019-04-10 01:28:11,720 [main] WARN  org.apache.hadoop.metrics2.impl.MetricsSystemImpl - JobTracker metrics system already initialized!
+2019-04-10 01:28:11,746 [main] WARN  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Encountered Warning DIVIDE_BY_ZERO 862377 time(s).
+2019-04-10 01:28:11,746 [main] INFO  org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.MapReduceLauncher - Success!
+2019-04-10 01:28:50,691 [main] INFO  org.apache.pig.Main - Pig script completed in 1 hour, 8 minutes, 26 seconds and 796 milliseconds (4106796 ms)
+Srirams-MBP:Data sriramayyagari$ 

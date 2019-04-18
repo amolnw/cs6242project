@@ -1,0 +1,107 @@
+green_taxidata = LOAD './green1/*' USING PigStorage(',')
+AS (vendor_id:chararray, pickup_datetime: datetime, dropoff_datetime: datetime, store_and_fwd_flag:chararray, rate_code:chararray, pickup_longitude: double, pickup_latitude:double, dropoff_longitude: double, dropoff_latitude:double, passenger_count:int, trip_distance: double, fare_amount:double, surcharge: double, mta_tax:double, tip_amount:double, tolls_amount:double, Ehail_fee:double, total_amount: double, payment_type:chararray, Trip_type:chararray);
+
+tltdg = foreach green_taxidata generate  'g' as source:chararray, pickup_datetime, pickup_latitude, pickup_longitude, fare_amount, trip_distance;
+
+tltdg = filter tltdg by pickup_datetime is not null and (pickup_latitude!=0.0 and pickup_latitude is not null) and (pickup_longitude!=0.0 and pickup_longitude is not null);
+
+tltddg= distinct tltdg;
+
+
+yello_taxidata = LOAD './yellow1/*' USING PigStorage(',')
+AS (vendor_id:chararray, pickup_datetime: datetime, dropoff_datetime: datetime, passenger_count:int, trip_distance: double, pickup_longitude: double, pickup_latitude:double, rate_code:chararray, store_and_fwd_flag:chararray, dropoff_longitude: double, dropoff_latitude:double, payment_type:chararray, fare_amount:double, surcharge: double, mta_tax:double, tip_amount:double, tolls_amount:double, total_amount: double);
+
+tltdy = foreach yello_taxidata generate  'y' as source:chararray, pickup_datetime, pickup_latitude, pickup_longitude, fare_amount, trip_distance;
+
+tltdy = filter tltdy by pickup_datetime is not null and (pickup_latitude!=0.0 and pickup_latitude is not null) and (pickup_longitude!=0.0 and pickup_longitude is not null);
+
+tltddy= distinct tltdy;
+
+
+uber_taxidata = LOAD './uber1/*' USING PigStorage(',');
+
+uber_taxidata = filter uber_taxidata by $1 != 'Lat';
+
+tltdu = filter uber_taxidata by $0 is not null and ($1!=0.0 and $1 is not null) and ($2!=0.0 and $2 is not null);
+
+tltdu = foreach tltdu generate  'u' as source:chararray, ToDate(REPLACE($0,'\\"',''),'MM/dd/yyyy HH:mm:ss') as pickup_datetime:DateTime, $1 as pickup_latitude, $2 as pickup_longitude, 0.0 as fare_amount:double, 0.0 as trip_distance:double;
+
+tltddu= distinct tltdu;
+
+
+uber_taxidata_15 = LOAD './uber151/*' USING PigStorage(',');
+
+uber_taxidata_15 = filter uber_taxidata_15 by $1 != 'Dispatching_base_num';
+
+tltdu15 = filter uber_taxidata_15 by $1 is not null and ($3!=0 and $3 is not null);
+
+tltdu15 = foreach tltdu15 generate  'u' as source:chararray, ToDate(REPLACE($1,'\\"',''),'yyyy-MM-dd HH:mm:ss') as pickup_datetime:DateTime, $3 as pickup_location, 0.0 as fare_amount:double, 0.0 as trip_distance:double;
+
+tltddu15= distinct tltdu15;
+
+STORE tltddu15 INTO './taxioutwof15' USING PigStorage(',');
+fs -getmerge  ./taxioutwof15/ taxioutwof15.csv;
+
+
+tltddf = union tltddg, tltddy, tltdu;
+
+
+tltddfwf = filter tltddf by fare_amount is not null and fare_amount != 0.0;
+
+tltddfwf = foreach tltddfwf generate  source, pickup_datetime, pickup_latitude, pickup_longitude, fare_amount, trip_distance, ToString(pickup_datetime,'EEE') as day:chararray, GetHour(pickup_datetime) as hour;
+
+tltddfwf_mon = filter tltddfwf by day=='Mon';
+tltddfwf_tue = filter tltddfwf by day=='Tue';
+tltddfwf_wed = filter tltddfwf by day=='Wed';
+tltddfwf_thu = filter tltddfwf by day=='Thu';
+tltddfwf_fri = filter tltddfwf by day=='Fri';
+tltddfwf_sat = filter tltddfwf by day=='Sat';
+tltddfwf_sun = filter tltddfwf by day=='Sun';
+
+
+STORE tltddfwf_mon INTO './tltddfwf_mon' USING PigStorage(',');
+STORE tltddfwf_tue INTO './tltddfwf_tue' USING PigStorage(',');
+STORE tltddfwf_wed INTO './tltddfwf_wed' USING PigStorage(',');
+STORE tltddfwf_thu INTO './tltddfwf_thu' USING PigStorage(',');
+STORE tltddfwf_fri INTO './tltddfwf_fri' USING PigStorage(',');
+STORE tltddfwf_sat INTO './tltddfwf_sat' USING PigStorage(',');
+STORE tltddfwf_sun INTO './tltddfwf_sun' USING PigStorage(',');
+
+fs -getmerge  ./tltddfwf_mon/ tltddfwf_mon.csv;
+fs -getmerge  ./tltddfwf_tue/ tltddfwf_tue.csv;
+fs -getmerge  ./tltddfwf_wed/ tltddfwf_wed.csv;
+fs -getmerge  ./tltddfwf_thu/ tltddfwf_thu.csv;
+fs -getmerge  ./tltddfwf_fri/ tltddfwf_fri.csv;
+fs -getmerge  ./tltddfwf_sat/ tltddfwf_sat.csv;
+fs -getmerge  ./tltddfwf_sun/ tltddfwf_sun.csv;
+
+tltddfwof = filter tltddf by fare_amount is null or fare_amount == 0.0;
+
+tltddfwof = foreach tltddfwof generate source, pickup_datetime, pickup_latitude, pickup_longitude, fare_amount, trip_distance;
+
+tltddfwof = foreach tltddfwof generate source, pickup_datetime, pickup_latitude, pickup_longitude, fare_amount, trip_distance, ToString(pickup_datetime,'EEE') as day:chararray, GetHour(pickup_datetime) as hour;
+
+tltddfwof_mon = filter tltddfwof by day=='Mon';
+tltddfwof_tue = filter tltddfwof by day=='Tue';
+tltddfwof_wed = filter tltddfwof by day=='Wed';
+tltddfwof_thu = filter tltddfwof by day=='Thu';
+tltddfwof_fri = filter tltddfwof by day=='Fri';
+tltddfwof_sat = filter tltddfwof by day=='Sat';
+tltddfwof_sun = filter tltddfwof by day=='Sun';
+
+
+STORE tltddfwof_mon INTO './tltddfwof_mon' USING PigStorage(',');
+STORE tltddfwof_tue INTO './tltddfwof_tue' USING PigStorage(',');
+STORE tltddfwof_wed INTO './tltddfwof_wed' USING PigStorage(',');
+STORE tltddfwof_thu INTO './tltddfwof_thu' USING PigStorage(',');
+STORE tltddfwof_fri INTO './tltddfwof_fri' USING PigStorage(',');
+STORE tltddfwof_sat INTO './tltddfwof_sat' USING PigStorage(',');
+STORE tltddfwof_sun INTO './tltddfwof_sun' USING PigStorage(',');
+
+fs -getmerge  ./tltddfwof_mon/ tltddfwof_mon.csv;
+fs -getmerge  ./tltddfwof_tue/ tltddfwof_tue.csv;
+fs -getmerge  ./tltddfwof_wed/ tltddfwof_wed.csv;
+fs -getmerge  ./tltddfwof_thu/ tltddfwof_thu.csv;
+fs -getmerge  ./tltddfwof_fri/ tltddfwof_fri.csv;
+fs -getmerge  ./tltddfwof_sat/ tltddfwof_sat.csv;
+fs -getmerge  ./tltddfwof_sun/ tltddfwof_sun.csv;
