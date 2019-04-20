@@ -304,14 +304,23 @@ map.on('click', function(e) {
 		pricePredictionData = values[2].Results.output1.value.Values[0];
 		historicalData = values[3];
 		
+		var injury_prediction = 0
+		var fatality_prediction = 0
+		var accident_prediction = 0
+		if ( historicalData[0].collision_count > 0 ) {
+			injury_prediction = Math.round(collisionPredictionData[4]*100)/100
+			fatality_prediction = Math.round(collisionPredictionData[5]*100)/100
+			accident_prediction = Math.round(collisionPredictionData[6]*100)/100
+		}
+		
 		tooltip = "<strong>Historical values for zone</strong>" +
 				  "<p>Pickup Count :" + historicalData[0].pickup_count +
 				  "</br>Collision Count :" + historicalData[0].collision_count +
 				  "</p>" +
 				  "<strong>Predicted values for coordinates</strong>" +
-				  "<p>collision probability : " + Math.round(collisionPredictionData[6]*100)/100 +
-				  "</br>pickup probability : " + Math.round(pickupPredictionData[6]*100)/100 +
-				  "</br>predicted trip price : $" + Math.round(pricePredictionData[6]*100)/100 +
+				  "<p>pickup counts : " + Math.round(pickupPredictionData[5]*100)/100 +
+				  "</br>predicted trip price : $" + Math.round(pricePredictionData[5]*100)/100 +
+				  "</br>collision probability : Fatality (" + fatality_prediction + "), Injury (" + injury_prediction + ") Others (" + accident_prediction + ")" +
 				  "</p>";
 				  
 		new mapboxgl.Popup()
