@@ -3,7 +3,10 @@
 The package cs6242project contains the code for NYC ride hailing optimization project which helps taxi drivers in NYC maximise their efficiency and profits while minimizing the chances of collision and accidents.
 It contains the following directory structure:
 
+
 cs6242project/www - where the codes are located under
+
+
     d3-fetch.v1.min.js 	- D3.js library
     geojson2h3.js 	    - Conversion utilities between H3 indexes and GeoJSON 
     h3-js.js 	          - Provides a JavaScript version of H3, a hexagon-based geospatial indexing system from Uber
@@ -14,12 +17,14 @@ cs6242project/www - where the codes are located under
     server.py           - Python HTTPD server
 
 cs6242project/DataContent/APIs/taxidataapi/ - Contains APIs as follows:
+
     collision_counts.js         - Code for the API that provides collison count
     dbconfig.js 	              - Node.js configuration to establish connection with AWS RDS MySQL database
     pickup_collision_counts.js 	- Code for the API that provides combined pickup and collision counts 
     taxi_pickup_counts.js       - Code for the API that provides Taxi pickup counts 
     
 cs6242project/DataContent/PIG/ - Contains Pig Latin scripts as follows:
+
     pig-green-yellow-uber-taxiinfo.txt 	- To consolidate/merge various data files (green taxi, yello taxi, and Uber) into one file
     pig-script-collision-counts.txt 	  - Group by day of week, hour of day, and H3 zone to obtain collision counts
     pig-script-groupby-latlon.txt 	    - Group by count latitude,longitude,weekday,hour, and h3
@@ -34,20 +39,29 @@ cs6242project/DataContent/PIG/ - Contains Pig Latin scripts as follows:
 # Installation:
 
 Unzip cs6242project.zip file
+
 Setup AWS EMR
+
 Setup ML studio
+
 Setup Node.js APIs in AWS Lambda
+
 Start a webserver instance:
+
     python server.py
  
 # Execution:
 
-This application uses responsive web design and works fine with either desktop browser or any mobile browser
+This application uses responsive web design and works fine with either desktop browser or any mobile browser.
+
 For desktop/laptop, open the browser and give the URL http://localhost:8080 
+
 Alternatevely we have hosted the application in the URL http://ride-sharing-project.s3-website-us-east-1.amazonaws.com/
+
 By default pickup heat map is shown around the dropped pin. The dropped pin can be moved around the map, and the heatmap follows. 
 A click on the individual hexagonal cell opens up a tooltip containing historical information, and predicted information for 
 pickup counts, probability of collision, and predicted average trip price. 
+
 
 There're also option to focus on collision as well as combination of both collision and pickup. The prediction and historical information
 provided in the tooltips are for the current day of the week, and hour of the day. However, there're dropdown to pick any specific day
