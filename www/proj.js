@@ -209,8 +209,7 @@ function renderHexes(layerId, colorScale, map, hexagons) {
 
 // create the popup
 
-var popup = new mapboxgl.Popup({ offset: 25 })
-	.setText('New York City to be filled');
+var popup = new mapboxgl.Popup({ offset: 25 });
 
 
 // add markers to map
