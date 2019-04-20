@@ -1,59 +1,71 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
-<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
-<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
-<script src="require.js"></script>
-
-<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
-<link rel="stylesheet" type="text/css" href="index.css">
-
-<title>NYC Ride Sharing Optimization</title>
+<html>
+<head>
+	<meta charset="utf-8">
+	<script src="https://d3js.org/d3-dsv.v1.min.js"></script>
+	<meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+	<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
+	<script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+	<script src="require.js"></script>
+	<link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
+	<link rel="stylesheet" type="text/css" href="index.css">
+	<title>NYC Ride Sharing Optimization</title>
+</head>
 <body>
 <div id='map'></div>
-<div class='container'>
-  <input type="checkbox" id="pickup" onclick="HandleCheckboxes()" checked> &nbsp; Show Number of Pickups
-  <input type="checkbox" id="collision" onclick="HandleCheckboxes()"> &nbsp; Show Number of Collisions
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Override WeekDay:<select id="weekday" onchange="overrideWeekDay()">
-	<option value="0">Sun</option>
-	<option value="1">Mon</option>
-	<option value="2">Tur</option>
-	<option value="3">Wed</option>
-	<option value="4">Thu</option>
-	<option value="5">Fri</option>
-	<option value="6">Sat</option>
-  </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  Override HourOfDay:<select id="hourDay" onchange="overrideHourDay()">
-	<option value="0">0</option>
-	<option value="1">1</option>
-	<option value="2">2</option>
-	<option value="3">3</option>
-	<option value="4">4</option>
-	<option value="5">5</option>
-	<option value="6">6</option>
-	<option value="7">7</option>
-	<option value="8">8</option>
-	<option value="9">9</option>
-	<option value="10">10</option>
-	<option value="11">11</option>
-	<option value="12">12</option>
-	<option value="13">13</option>
-	<option value="14">14</option>
-	<option value="15">15</option>
-	<option value="16">16</option>
-	<option value="17">17</option>
-	<option value="18">18</option>
-	<option value="19">19</option>
-	<option value="20">20</option>
-	<option value="21">21</option>
-	<option value="22">22</option>
-	<option value="23">23</option>
-  </select>
+<div class='map-overlay top'>
+  <div class='map-overlay-inner'>
+		<b>Heatmap Filters</b></br>
+		<label for="pickup">Pickups</label>
+		<input type="checkbox" id="pickup" onclick="HandleCheckboxes()" checked>
+		<label for="collision">Collisions</label>
+		<input type="checkbox" id="collision" onclick="HandleCheckboxes()">
+		<fieldset>
+			<b>Select Weekday</b>
+			<select id='weekday' name='weekday' onchange="overrideWeekDay()">
+				<option value='0'>Sun</option>
+				<option value='1'>Mon</option>
+				<option value='2'>Tue</option>
+				<option value='3'>Wed</option>
+				<option value='4'>Thu</option>
+				<option value='5'>Fri</option>
+				<option value='6'>Sat</option>
+			</select>
+		</fieldset>	
+		<fieldset>
+			<b>Select HourDay </b>
+			<select id='hourDay' name='hourDay' onchange="overrideHourDay()">
+				<option value="0">0</option>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+				<option value="9">9</option>
+				<option value="10">10</option>
+				<option value="11">11</option>
+				<option value="12">12</option>
+				<option value="13">13</option>
+				<option value="14">14</option>
+				<option value="15">15</option>
+				<option value="16">16</option>
+				<option value="17">17</option>
+				<option value="18">18</option>
+				<option value="19">19</option>
+				<option value="20">20</option>
+				<option value="21">21</option>
+				<option value="22">22</option>
+				<option value="23">23</option>
+			</select>
+		</fieldset>
+	</div>
 </div>
 
 <div id='pickup-legend' class='legend' style='display:block;'>
-<h4>Normalized Number of Pickups</h4>
+<h4>Pickups</h4>
 <div><span style='background-color:#1214eb;'></span>90 - 100%</div>
 <div><span style='background-color:#102eec;'></span>80 - 90%</div>
 <div><span style='background-color:#0d48ee;'></span>70 - 80%</div>
@@ -67,7 +79,7 @@
 </div>
 
 <div id='collision-legend' class='legend' style='display:none;'>
-<h4>Normalized Number of Collisions</h4>
+<h4>Collisions</h4>
 <div><span style='background-color:#eb3d12;'></span>90 - 100%</div>
 <div><span style='background-color:#eb4720;'></span>80 - 90%</div>
 <div><span style='background-color:#ec522e;'></span>70 - 80%</div>
@@ -81,7 +93,7 @@
 </div>
 
 <div id='combined-legend' class='legend' style='display:none;'>
-<h4>Normalized Number of Pickups and Collisions</h4>
+<h4>Pickups and Collisions</h4>
 <div><span style='background-color:#C27A00;'></span>90 - 100%</div>
 <div><span style='background-color:#C64100;'></span>80 - 90%</div>
 <div><span style='background-color:#CA0500;'></span>70 - 80%</div>

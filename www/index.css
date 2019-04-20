@@ -6,30 +6,47 @@ body {
 }
 
 #map {
-  position: absolute;
-  top: 80px;
-  bottom: 0;
-  width: 100%;
+	position:absolute; 
+	top:0; 
+	bottom:0; 
+	width:100%;
 }
 
-#pickup {
-  margin-top: 30px;    
+.map-overlay {
+	font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+	position: absolute;
+	width: 160px;
+	top: 0;
+	left: 0;
+	padding: 10px;
+}
+ 
+.map-overlay .map-overlay-inner {
+	background-color: #fff;
+	box-shadow:0 1px 2px rgba(0, 0, 0, 0.10);
+	border-radius: 3px;
+	padding: 5px;
+	margin-bottom: 10px;
 }
 
-#collision {
-  margin-left: 40px;  
-  margin-top: -20px;   
+.map-overlay-inner fieldset {
+	border: none;
+	padding: 0px;
+	margin: 10px 0px 10px;
+}
+ 
+.map-overlay-inner fieldset:last-child {
+	margin: 0;
+}
+ 
+.map-overlay-inner select {
+	width: 80;
 }
 
-#weekday {
-  margin-left: 10px;  
-  margin-top: -20px;   
+.map-overlay-inner legend {
+	width: 80;
 }
 
-#hourDay {
-  margin-left: 10px;  
-  margin-top: -20px;   
-}
 
 .marker {
   background-image: url('mapbox-icon.png');

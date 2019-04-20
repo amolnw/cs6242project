@@ -2,10 +2,13 @@ var h3, geojson2h3, fetchedData;
 var h3Granularity = 10;
 mapboxgl.accessToken = 'pk.eyJ1IjoiYW1vbG53IiwiYSI6ImNqdGY4ZjlqNjFxZDkzeW9iczE4MWg4MGEifQ.YpUeahTCDxjUq84pSDGeNw';
 
-var pickupEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcounts'
-var collisionEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/collisioncounts'
-var combinedEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcollisioncounts'
-var proxyUrl = 'https://cors-anywhere.herokuapp.com/'
+const pickupEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcounts'
+const collisionEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/collisioncounts'
+const combinedEndpoint = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/pickupcollisioncounts'
+const pricePredictionAPI = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/predictfareamount'
+const pickupPredictionAPI = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/predictpickupcounts'
+const collisionPredictionAPI = 'https://8f44ly4zrc.execute-api.us-east-1.amazonaws.com/taxi/predictcollisioncounts'
+const proxyUrl = 'https://cors-anywhere.herokuapp.com/'
 
 const sourceId = 'h3-hexes';
 const pickupLayerId = `${sourceId}-pickup-layer`;
@@ -36,7 +39,7 @@ var map = new mapboxgl.Map({
 	config.lat,
   ],
   zoom: config.zoom,
-  style: 'mapbox://styles/mapbox/light-v9'
+  style: 'mapbox://styles/mapbox/dark-v9'
 });
 
 require(['h3-js'], function (h3loaded) {
@@ -89,40 +92,47 @@ function loadPickupHeatmap(lat, lng) {
 	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
 
-	postData(proxyUrl + pickupEndpoint, request)
+	postDataWithoutAuthentication(proxyUrl + pickupEndpoint, request)
 	  .then(data => renderHexes(pickupLayerId, config.pickupColorScale, map, normalizeLayer(pickupLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
 function loadCollisionHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
-
 	const nearbyh3 = h3.kRing(h3Index, 3);
-	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
-
-	postData(proxyUrl + collisionEndpoint, request)
+	postDataWithoutAuthentication(proxyUrl + collisionEndpoint, request)
 	  .then(data => renderHexes(collisionLayerId, config.collisionColorScale, map, normalizeLayer(collisionLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
 function loadBothHeatmap(lat, lng) {
 	h3Index = h3.geoToH3(lat, lng, h3Granularity)
-
 	const nearbyh3 = h3.kRing(h3Index, 3);
-	
 	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:nearbyh3})
-
-	postData(proxyUrl + combinedEndpoint, request)
+	postDataWithoutAuthentication(proxyUrl + combinedEndpoint, request)
 	  .then(data => renderHexes(combinedLayerId, config.combinedColorScale, map, normalizeLayer(combinedLayer(data))) )
 	  .catch(error => console.error(error));
 }
 
-async function postData(url, request) {
+async function postDataWithoutAuthentication(url, request) {
     let response  = await fetch(url, {
         method: "POST", 
         headers: {
             "Content-Type": "application/json"
+        },
+        body: request, 
+    });
+    let responseData = await response.json();
+	return responseData;
+}
+
+async function postDataWithAuthentication(url, request, key) {
+    let response  = await fetch(url, {
+        method: "POST", 
+        headers: {
+            "Content-Type": "application/json",
+			"Authentication": key
         },
         body: request, 
     });
@@ -138,16 +148,13 @@ function normalizeLayer(layer, baseAtZero = false) {
 	  const min = baseAtZero ? hexagons.reduce((min, hex) => Math.min(min, layer[hex]), Infinity) : 0;
 	  // Pass two, normalize
 	  hexagons.forEach(hex => {
-		//if (nearbyh3.includes(hex)) {
 		  newlayer[hex] = (layer[hex] - min) / (max - min); 
-		//}
 	  });
 	  return newlayer;
 }
 
 function renderHexes(layerId, colorScale, map, hexagons) {
   // Transform the current hexagon map into a GeoJSON object
-  console.log(hexagons);
   const geojson = geojson2h3.h3SetToFeatureCollection(
     Object.keys(hexagons),
     hex => ({value: hexagons[hex]})
@@ -214,16 +221,105 @@ var marker = new mapboxgl.Marker({
 .setPopup(popup) // sets a popup on this marker
 .addTo(map);
 
+function checkStatus(response) {
+  if (response.ok) {
+    return Promise.resolve(response);
+  } else {
+    return Promise.reject(new Error(response.statusText));
+  }
+}
+
+function parseJSON(response) {
+  return response.json();
+}
+
 map.on('click', function(e) {
 	h3Index = h3.geoToH3(e.lngLat.lat, e.lngLat.lng, h3Granularity);
-	console.log(h3Index, e.lngLat);
 	
-	var request = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:[h3Index]})
-	var description;
-	postData(proxyUrl + combinedEndpoint, request)
-	  .then(data => addPopupOnClick(e.lngLat, data))
-	  .catch(error => console.error(error));
+	const predictionRequest = JSON.stringify({
+		  Inputs: {
+			input1: {
+			  ColumnNames: [
+				'latitude',
+				'longitude',
+				'weekday',
+				'hour'
+			  ],
+			  Values: [
+				[
+				  e.lngLat.lat,
+				  e.lngLat.lng,
+				  dayOfWeekAsString(dayOfWeek),
+				  hourOfDay    
+				]
+			  ]
+			}
+		  }
+		});
+		
+	const historicalRequest = JSON.stringify({weekday: dayOfWeekAsString(dayOfWeek), hour:hourOfDay, h3:[h3Index]})	
+		
+	collisionAPIcall = fetch(proxyUrl + collisionPredictionAPI, {
+					method: "POST",							
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: predictionRequest, 
+				}).then(function(response){
+						 return response.json()
+				});
+				
+	pickupAPIcall = fetch(proxyUrl + pickupPredictionAPI, {
+					method: "POST",							
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: predictionRequest, 
+				}).then(function(response){
+						 return response.json()
+				});	
+
+	priceAPIcall = fetch(proxyUrl + pricePredictionAPI, {
+					method: "POST",							
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: predictionRequest, 
+				}).then(function(response){
+						 return response.json()
+				});
+				
+	historicalAPIcall = fetch(proxyUrl + combinedEndpoint, {
+					method: "POST",							
+					headers: {
+						"Content-Type": "application/json"
+					},
+					body: historicalRequest, 
+				}).then(function(response){
+						 return response.json()
+				});			
 	
+	Promise.all([collisionAPIcall, pickupAPIcall, priceAPIcall, historicalAPIcall]).then(function(values){
+		collisionPredictionData = values[0].Results.output1.value.Values[0];
+		pickupPredictionData = values[1].Results.output1.value.Values[0];
+		pricePredictionData = values[2].Results.output1.value.Values[0];
+		historicalData = values[3];
+		
+		tooltip = "<strong>Historical values for zone</strong>" +
+				  "<p>Pickup Count :" + historicalData[0].pickup_count +
+				  "</br>Collision Count :" + historicalData[0].collision_count +
+				  "</p>" +
+				  "<strong>Predicted values for coordinates</strong>" +
+				  "<p>collision probability : " + Math.round(collisionPredictionData[6]*100)/100 +
+				  "</br>pickup probability : " + Math.round(pickupPredictionData[6]*100)/100 +
+				  "</br>predicted trip price : $" + Math.round(pricePredictionData[6]*100)/100 +
+				  "</p>";
+				  
+		new mapboxgl.Popup()
+			.setLngLat(e.lngLat)
+			.setHTML(tooltip)
+			.addTo(map);		  
+	});
 });
 
 
@@ -232,7 +328,6 @@ function overrideWeekDay() {
     var selValue = selObj.options[selObj.selectedIndex].text;
 	dayOfWeek = selObj.value;
 	HandleCheckboxes()
-	console.log(selValue);
 }
 
 function overrideHourDay() {
@@ -240,19 +335,6 @@ function overrideHourDay() {
     var selValue = selObj.options[selObj.selectedIndex].text;
 	hourOfDay = selValue;
 	HandleCheckboxes()
-	console.log(selValue);
-}
-
-function addPopupOnClick(lngLat, data){
-	
-	var description = "<strong>Historical values based on selected zone (" 
-						+ dayOfWeekAsString(dayOfWeek) + " : " + hourOfDay + " hour)</strong>" + 
-					  "<p> Pickup Count: " + data[0].pickup_count + "</br> Collision Count: " + data[0].collision_count + "</p>"; 
-	
-	new mapboxgl.Popup()
-		.setLngLat(lngLat)
-		.setHTML(description)
-		.addTo(map);
 }
 
 var lat = config.lat;
