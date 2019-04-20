@@ -3,7 +3,7 @@ d3-fetch.v1.min.js 	- D3.js library# cs6242project
 The package cs6242project contains the code for NYC ride hailing optimization project which helps taxi drivers in NYC maximise their efficiency and profits while minimizing the chances of collision and accidents.
 It contains the following directory structure:
 
-.
+```
 +-- www
 |   +-- d3-fetch.v1.min.js ( Fetch REST endpoints  )
 |   +-- geojson2h3.js ( Convert Hex to GeoJSON )
@@ -31,7 +31,7 @@ It contains the following directory structure:
 |           +-- pig-script-pred_rmdup.txt 	        - ??
 |           +-- price_average pig logs.txt ( Log file AWS EMR pig job run for average trip price )
 |           +-- taxi_info_data_extraction_pig_logs.txt ( Log file AWS EMR pig job run )
-
+```
 # Setup:
 
 Setup AWS EMR
