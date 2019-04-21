@@ -27,8 +27,3 @@ exports.handler =  (event, context, callback) => {
         console.log('------ error calling  ------' + err);
     }
 };
-  
-
-
-
-
