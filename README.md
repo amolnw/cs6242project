@@ -3,36 +3,38 @@ The package cs6242project contains the code for NYC ride hailing optimization pr
 It contains the following directory structure:
 
 ```
-+-- www
-|   +-- d3-fetch.v1.min.js ( Fetch REST endpoints  )
-|   +-- geojson2h3.js ( Convert Hex to GeoJSON )
-|   +-- h3-js.js ( Convert lat/long coordinates to H3 and get nearest rings for visualization )
-|   +-- index.css ( CSS stylesheet for the page )
-|   +-- index.html ( Default HTML page with selection boxes and legends )
-|   +-- proj.js ( interactive map visualization, heatmaps, markers and tooltip  )
-|   +-- require.js ( Asynchronous Module Loading (AMD) for loading files )
-|   +-- server.py( Python HTTP server )
-+-- DataContent
-|   +-- APIs
-|       +-- taxidataapi 
-|           +-- collision_counts.js ( Collision count REST API ) 
-|           +-- dbconfig.js ( Node.js configuration to establish connection with AWS RDS MySQL database )
-|           +-- pickup_collision_counts.js ( Combined pickup and collision counts REST API )
-|           +-- taxi_pickup_counts.js ( Taxi pickup counts REST API )
-|           +-- azure-ml-collision-counts.js ( Predicted Taxi collision counts REST API )
-|           +-- azure-ml-fareamount-counts.js ( Predicted fare amount REST API )
-|           +-- azure-ml-pickup-counts.js ( Predicted Taxi pickup counts REST API )
-|   +-- PIG
-|           +-- pig-green-yellow-uber-taxiinfo.txt ( Merge various data files (green taxi, yello taxi, and Uber) into one file )
-|           +-- pig-script-collision-counts.txt ( Group by day of week, hour of day, and H3 zone to obtain collision counts )
-|           +-- pig-script-groupby-latlon.txt ( Group by count latitude,longitude,weekday,hour, and h3 )
-|           +-- pig-script-groupby.txt ( Group by count latitude (rounded to 5 degits,longitude rounded to 5 degits,weekday,hour, and h3 )
-|           +-- pig-script-pickup-groupby-latlong-weekday-hour.txt ( Group by taxi pickup count by weekday, hour, and lat-long )
-|           +-- pig-script-pred.txt ( Generates the input fare amount data for ML prediction algorithm )
-|           +-- pig-script-pred_normalize.txt ( Clean,removed boundary condition data such as latitude <35 or >45 and longitude <-75 and >-70, pre-process, subset and normalized data for ML algorithm )
-|           +-- pig-script-pred_rmdup.txt (Removed invalid fareamounts)
-|           +-- price_average pig logs.txt ( Log file pig job run for average trip price )
-|           +-- taxi_info_data_extraction_pig_logs.txt ( Log file pig job run )
++CODE
+   |
+   +---- www
+   |           +-- d3-fetch.v1.min.js ( Fetch REST endpoints  )
+   |           +-- geojson2h3.js ( Convert Hex to GeoJSON )
+   |           +-- h3-js.js ( Convert lat/long coordinates to H3 and get nearest rings for visualization )
+   |           +-- index.css ( CSS stylesheet for the page )
+   |           +-- index.html ( Default HTML page with selection boxes and legends )
+   |           +-- proj.js ( interactive map visualization, heatmaps, markers and tooltip  )
+   |           +-- require.js ( Asynchronous Module Loading (AMD) for loading files )
+   |           +-- server.py( Python HTTP server )
+   |
+   +---- apis
+   |           +-- collision_counts.js ( Collision count REST API ) 
+   |           +-- dbconfig.js ( Node.js configuration to establish connection with AWS RDS MySQL database )
+   |           +-- pickup_collision_counts.js ( Combined pickup and collision counts REST API )
+   |           +-- taxi_pickup_counts.js ( Taxi pickup counts REST API )
+   |           +-- azure-ml-collision-counts.js ( Predicted Taxi collision counts REST API )
+   |           +-- azure-ml-fareamount-counts.js ( Predicted fare amount REST API )
+   |           +-- azure-ml-pickup-counts.js ( Predicted Taxi pickup counts REST API )
+   |
+   +---- pig
+   |           +-- pig-green-yellow-uber-taxiinfo.txt ( Merge various data files (green taxi, yello taxi, and Uber) into one file )
+   |           +-- pig-script-collision-counts.txt ( Group by day of week, hour of day, and H3 zone to obtain collision counts )
+   |           +-- pig-script-groupby-latlon.txt ( Group by count latitude,longitude,weekday,hour, and h3 )
+   |           +-- pig-script-groupby.txt ( Group by count latitude (rounded to 5 degits,longitude rounded to 5 degits,weekday,hour, and h3 )
+   |           +-- pig-script-pickup-groupby-latlong-weekday-hour.txt ( Group by taxi pickup count by weekday, hour, and lat-long )
+   |           +-- pig-script-pred.txt ( Generates the input fare amount data for ML prediction algorithm )
+   |           +-- pig-script-pred_normalize.txt ( Clean,removed boundary condition data such as latitude <35 or >45 and longitude <-75 and >-70, pre-process, subset and normalized data for ML algorithm )
+   |           +-- pig-script-pred_rmdup.txt (Removed invalid fareamounts)
+   |           +-- price_average pig logs.txt ( Log file pig job run for average trip price )
+   |           +-- taxi_info_data_extraction_pig_logs.txt ( Log file pig job run )
 ```
 # Setup:
 
