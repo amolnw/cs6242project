@@ -3,7 +3,6 @@ var databaseInfo = {
 	pool: '10',
     host     : 'nyctaxidb.cti58fwvgshd.us-east-1.rds.amazonaws.com',
     user     : 'nyctaxidbuser',
-    password : 'Password6242$',
     database : 'nyctaxidb',
     timeout  : '10000'
 };
