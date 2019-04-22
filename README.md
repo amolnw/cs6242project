@@ -75,7 +75,9 @@ Setup ML studio
 4. After creating the data set you can review or visualize dataset created.
 5. Select "Experiments" on the left navigation panel" and select "New (+)". 
 6. Select New experiment. Please follow below instructions for "Predicting fare amount" model 
+
  Predicting fare amount
+ 
   i) Select the dataset and drag and drop in the dataset input option
   ii) Darg and drop below tasks in the experiment window
     "Select Column Dataset", "Missing Value Scrubber" (you can data cleaning in Hadoop to make there is no missing data), "Split Data", "Fast Forest Quantile Regression", "Tune Model Hyper Parameters", "Score Model", "Evaluate Model", "Cross-Validation Model"
@@ -85,10 +87,21 @@ Setup ML studio
   vi) In the fast forest quantile regression select "16,32,64" for "Max number of leaves per tree", "Maximum number of trees during training creation". Select "1,5,10" for "Minimum number of cases required to form leave". Select "0.25,0.5,075" "bagging fraction" 
   vii) Select Run/Setup as WebService/Run (Webservice Model) and Deploy Webservice to create APIs to call from different clients.
   viii) Experiment these value to make sure you have good results
+  
  Predicting collision-prone zones
-  i)
-  ii)
-  iii)
+ 
+  i) Select the dataset and drag and drop in the dataset input option
+  ii) Darg and drop below tasks in the experiment window
+    "Select Column Dataset","Split Data", 
+    "Two-Class Support Vector Machine" with Number of iterations as 1 and Lambda as 0.001,  
+      a) Add "One-vs-All Multiclass" and connect with "Two-Class Support Vector Machine"
+      b) Add "Train Model" and connect with "One-vs-All Multiclass"
+      c) Add "Score Model" and connect with "Train Model"
+      d) Add "Evaluate Model" and connect with "Score Model"
+  iii) Add "Multiclass Decision Jungle" and set Bagging options with "Number of decision DAGs as 8, Max. depath of decision DAG as 32 and Max. width of decision DAG as 128, Number of optimizations steps per decision DAG as 2048
+      a) Add "Train Model" and connect with "Multiclass Decision Jungle"
+      b) Add "Score Model" and connect with "Train Model"
+      c) Connect "Score Model" with previously added "Evaluate Model" 
 
 Setup Node.js APIs in AWS Lambda
  1) You can use any IDE to create node.js scripts
