@@ -34,6 +34,8 @@ It contains the following directory structure:
    |           +-- pig-script-pred_rmdup.txt (Removed invalid fareamounts)
    |           +-- price_average pig logs.txt ( Log file pig job run for average trip price )
    |           +-- taxi_info_data_extraction_pig_logs.txt ( Log file pig job run )
+   +---- sql
+   |           +-- rdsSchema.sql ( schema file for RDS )
 ```
 # Setup:
 
