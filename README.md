@@ -64,7 +64,7 @@ Local Setup (Mac OS)
 4. Please export commands to add Hadoop and Pig paths to work on a terminal or go to the installed location and run Hadoop and Pig to start CLI options to run Hadoop and Pig scripts
 5. Go to Hadoop CLI and create folder using "hadoop fs -ls /user/basefoldername" and "hadoop fs -ls /user/basefoldername/workingfolder" for example "hadoop fs -ls  /user/sriramayyagari/" and hadoop fs -ls  /user/sriramayyagari/nyctaxidata"
 6. Another option is you can create a shell script with all required Hadoop command that you need to run or repeat as you work through different operations using Pig (Please find sample Hadoop scripts commands such as moving folders, files, removing files, storing and merging files)
-7. Create Pig scripts that you would like to run using pig scripts
+7. Create Pig scripts that you would like to run using pig cli
 8. To run locally use, "pig -x local" option and to run in Hadoop use "pig -x mapreduce" options
 9. Run different commands provided or create your own script to run the pig scripts and data cleansing/extraction operations
 
